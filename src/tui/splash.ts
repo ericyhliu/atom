@@ -183,8 +183,8 @@ export function atomFrame(t: number, cols: number, rows: number, version: string
   return lines;
 }
 
-/** Play the animation until `durationMs` elapses or a key is pressed. */
-export function runSplash(version: string, durationMs = 3200): Promise<void> {
+/** Play the animation until a key is pressed. Ctrl-C exits the process. */
+export function runSplash(version: string): Promise<void> {
   return new Promise((resolve) => {
     const start = Date.now();
     let done = false;
@@ -195,18 +195,20 @@ export function runSplash(version: string, durationMs = 3200): Promise<void> {
       stdout.write(seq.syncOn + seq.home + lines.map((l) => fit(l, cols)).join("\r\n") + seq.syncOff);
     };
 
-    const finish = () => {
+    const finish = (buf: Buffer) => {
       if (done) return;
       done = true;
       clearInterval(timer);
-      clearTimeout(deadline);
       stdin.off("data", finish);
       stdout.off("resize", draw);
+      if (buf.includes(0x03)) {
+        stdout.write(seq.show + seq.altOff);
+        process.exit(0);
+      }
       resolve();
     };
 
     const timer = setInterval(draw, 40);
-    const deadline = setTimeout(finish, durationMs);
     stdin.on("data", finish);
     stdout.on("resize", draw);
     draw();
