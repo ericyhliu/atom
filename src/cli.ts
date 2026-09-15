@@ -14,6 +14,7 @@ import { systemPrompt } from "./prompt.ts";
 import { readFileTool } from "./tools/read_file.ts";
 import { listDirTool } from "./tools/list_dir.ts";
 import { bashTool } from "./tools/bash.ts";
+import pkg from "../package.json" with { type: "json" };
 
 const MODEL = process.env.ATOM_MODEL ?? "moonshotai/Kimi-K2-Instruct";
 
@@ -90,14 +91,36 @@ async function handle(input: string): Promise<boolean> {
 }
 
 async function main() {
-  const oneShot = process.argv.slice(2).join(" ");
+  const args = process.argv.slice(2);
+  if (args[0] === "--version" || args[0] === "-v") {
+    stdout.write(`atom ${pkg.version}\n`);
+    rl.close();
+    return;
+  }
+  if (args[0] === "--help" || args[0] === "-h") {
+    stdout.write(`atom ${pkg.version} — a minimal coding agent on together.ai
+
+usage:
+  atom              start an interactive session
+  atom "<prompt>"   run a single prompt and exit
+  atom --version
+
+env:
+  TOGETHER_API_KEY  required
+  ATOM_MODEL        model id (default: ${MODEL})
+`);
+    rl.close();
+    return;
+  }
+
+  const oneShot = args.join(" ");
   if (oneShot) {
     await handle(oneShot);
     rl.close();
     return;
   }
 
-  stdout.write(`${bold("atom")} ${dim(`· ${MODEL} · ${process.cwd()}`)}\n`);
+  stdout.write(`${bold("atom")} ${dim(`${pkg.version} · ${MODEL} · ${process.cwd()}`)}\n`);
   stdout.write(dim("type a message, or /help\n\n"));
 
   while (true) {

@@ -55,7 +55,7 @@ const BASE_URL = process.env.TOGETHER_BASE_URL ?? "https://api.together.xyz/v1";
 
 export async function chat(req: ChatRequest): Promise<ChatResponse> {
   const apiKey = process.env.TOGETHER_API_KEY;
-  if (!apiKey) throw new Error("TOGETHER_API_KEY is not set (see .env.example)");
+  if (!apiKey) throw new Error("TOGETHER_API_KEY is not set — run: export TOGETHER_API_KEY=your_key");
 
   const res = await fetch(`${BASE_URL}/chat/completions`, {
     method: "POST",

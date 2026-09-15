@@ -1,0 +1,28 @@
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.4.2"
+      - name: Check tag matches package.json
+        run: |
+          pkg="v$(node -p "require('./package.json').version")"
+          [ "$pkg" = "${GITHUB_REF_NAME}" ] || { echo "tag ${GITHUB_REF_NAME} != package.json $pkg"; exit 1; }
+      - run: ./scripts/build.sh
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/atom-*
+            dist/checksums.txt
+          generate_release_notes: true

@@ -5,12 +5,32 @@ Zero dependencies, runs directly on Node 24 (no build step). The goal is to
 learn harness engineering by building a mini [opencode](https://opencode.ai)
 from the ground up.
 
-## Run
+## Install
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/ericyhliu/atom/main/install.sh | sh
+export TOGETHER_API_KEY=your_key
+atom
+```
+
+Single binary, no runtime needed. Re-run the installer to upgrade.
+
+## Develop
 
 ```sh
 cp .env.example .env      # add your TOGETHER_API_KEY
 npm start                 # REPL
 npm start -- "list the files here"   # one-shot
+npm run build             # binaries for all platforms into dist/ (needs bun)
+```
+
+## Release
+
+Bump `version` in `package.json`, then tag it — CI builds the binaries and
+publishes a GitHub Release that `install.sh` picks up:
+
+```sh
+git tag v0.1.0 && git push origin v0.1.0
 ```
 
 ## What a harness is

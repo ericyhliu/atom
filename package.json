@@ -1,13 +1,18 @@
 {
   "name": "atom",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A minimal CLI agent harness wrapping together.ai",
   "type": "module",
   "private": true,
-  "bin": { "atom": "./src/cli.ts" },
+  "bin": {
+    "atom": "./src/cli.ts"
+  },
   "scripts": {
     "start": "node --env-file-if-exists=.env src/cli.ts",
+    "build": "./scripts/build.sh",
     "typecheck": "tsc --noEmit"
   },
-  "engines": { "node": ">=24" }
+  "engines": {
+    "node": ">=24"
+  }
 }
