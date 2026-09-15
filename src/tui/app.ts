@@ -330,7 +330,7 @@ class Tui {
 
     // paint
     let frame = seq.syncOn + seq.home + lines.slice(0, rows).map((l) => fit(l, cols)).join("\r\n");
-    const inputRow = rows - 3;
+    const inputRow = rows - 2; // status is the last row, bottom border above it
     const inputCol = 5 + (this.cursor - start);
     if (!this.busy && !this.pending) frame += seq.to(inputRow, inputCol) + seq.show;
     else frame += seq.hide;
