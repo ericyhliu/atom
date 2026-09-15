@@ -1,6 +1,6 @@
 {
   "name": "atom",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "description": "A minimal CLI agent harness wrapping together.ai",
   "type": "module",
   "private": true,

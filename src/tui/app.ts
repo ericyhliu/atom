@@ -21,6 +21,8 @@ import { homedir } from "node:os";
 import type { Agent, AgentEvents } from "../agent.ts";
 import { enterRaw, exitRaw, fit, parseKeys, s, seq, size, visibleWidth, type Key } from "./term.ts";
 import { runSplash } from "./splash.ts";
+import { checkForUpdate } from "../update.ts";
+import { spawnSync } from "node:child_process";
 
 type BlockKind = "user" | "assistant" | "tool" | "result" | "error" | "info";
 interface Block { kind: BlockKind; text: string }
@@ -112,7 +114,13 @@ class Tui {
   async run(): Promise<void> {
     enterRaw();
     stdout.write(seq.altOn + seq.hide + seq.clear);
-    await runSplash(this.opts.version);
+    const { restart } = await runSplash(this.opts.version, checkForUpdate(this.opts.version));
+    if (restart) {
+      stdout.write(seq.show + seq.altOff);
+      exitRaw();
+      const child = spawnSync(process.execPath, process.argv.slice(2), { stdio: "inherit" });
+      process.exit(child.status ?? 0);
+    }
 
     stdin.on("data", this.onData);
     stdout.on("resize", this.render);

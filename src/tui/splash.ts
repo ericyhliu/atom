@@ -15,6 +15,7 @@
 
 import { stdin, stdout } from "node:process";
 import { fit, seq, size } from "./term.ts";
+import { applyUpdate, type Release } from "../update.ts";
 
 type Vec = [number, number, number];
 
@@ -95,7 +96,7 @@ class Canvas {
   }
 }
 
-export function atomFrame(t: number, cols: number, rows: number, version: string): string[] {
+export function atomFrame(t: number, cols: number, rows: number, footer: string[]): string[] {
   const cv = new Canvas(cols, rows);
   const R = Math.max(5, Math.min(18, Math.floor((cols - 6) / 2.4), rows - 9));
   const cx = cols / 2;
@@ -179,37 +180,77 @@ export function atomFrame(t: number, cols: number, rows: number, version: string
     return " ".repeat(pad) + style + text + "\x1b[0m";
   };
   lines[wordRow] = center("a  t  o  m", "\x1b[1m");
-  lines[wordRow + 1] = center(`v${version} · press any key`, "\x1b[2m");
+  footer.forEach((text, i) => {
+    if (wordRow + 1 + i < rows) lines[wordRow + 1 + i] = center(text, i === 0 ? "\x1b[2m" : "\x1b[33m");
+  });
   return lines;
 }
 
-/** Play the animation until a key is pressed. Ctrl-C exits the process. */
-export function runSplash(version: string): Promise<void> {
+export interface SplashResult {
+  restart: boolean; // true if the binary was replaced and should be re-exec'd
+}
+
+/**
+ * Play the animation until a key is pressed. If `update` resolves to a
+ * newer release while we're here, offer it; `y` installs it in place.
+ */
+export function runSplash(version: string, update: Promise<Release | null>): Promise<SplashResult> {
   return new Promise((resolve) => {
     const start = Date.now();
     let done = false;
+    let release: Release | null = null;
+    let phase: "idle" | "offer" | "busy" | "done" | "error" = "idle";
+    let message = "";
+
+    const footer = (): string[] => {
+      switch (phase) {
+        case "idle": return [`v${version} · press any key`];
+        case "offer": return [`A new release v${release!.version} is available. Update now?`, "[y] update    [n] skip"];
+        case "busy": return [message];
+        case "done": return [`updated to v${release!.version} · restarting…`];
+        case "error": return [message, "press any key to continue"];
+      }
+    };
 
     const draw = () => {
       const { cols, rows } = size();
-      const lines = atomFrame((Date.now() - start) / 1000, cols, rows, version);
+      const lines = atomFrame((Date.now() - start) / 1000, cols, rows, footer());
       stdout.write(seq.syncOn + seq.home + lines.map((l) => fit(l, cols)).join("\r\n") + seq.syncOff);
     };
 
-    const finish = (buf: Buffer) => {
+    const finish = (result: SplashResult) => {
       if (done) return;
       done = true;
       clearInterval(timer);
-      stdin.off("data", finish);
+      stdin.off("data", onKey);
       stdout.off("resize", draw);
+      resolve(result);
+    };
+
+    const onKey = (buf: Buffer) => {
       if (buf.includes(0x03)) {
         stdout.write(seq.show + seq.altOff);
         process.exit(0);
       }
-      resolve();
+      if (phase === "busy") return;
+      if (phase === "offer" && /^[yY]/.test(buf.toString())) {
+        phase = "busy";
+        applyUpdate(release!, (msg) => { message = msg; })
+          .then(() => { phase = "done"; draw(); setTimeout(() => finish({ restart: true }), 600); })
+          .catch((err) => { phase = "error"; message = (err as Error).message; });
+        return;
+      }
+      finish({ restart: false });
     };
 
+    update.then((rel) => {
+      if (done || !rel) return;
+      release = rel;
+      phase = "offer";
+    });
+
     const timer = setInterval(draw, 40);
-    stdin.on("data", finish);
+    stdin.on("data", onKey);
     stdout.on("resize", draw);
     draw();
   });

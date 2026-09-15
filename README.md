@@ -13,7 +13,8 @@ export TOGETHER_API_KEY=your_key
 atom
 ```
 
-Single binary, no runtime needed. Re-run the installer to upgrade.
+Single binary, no runtime needed. On launch, atom checks for a newer release
+and offers to update itself in place (set `ATOM_NO_UPDATE_CHECK=1` to disable).
 
 ## Develop
 
@@ -62,6 +63,7 @@ that function to turn it into an agent:
 | `src/tools/` | Each tool = name + description + JSON schema + `execute()`. Always returns a string; errors are returned as text so the model can recover. |
 | `src/prompt.ts` | System prompt. Injects cwd/platform so the model has situational awareness. |
 | `src/cli.ts` | Entrypoint. `atom "prompt"` or a pipe → plain mode; `atom` in a terminal → the TUI. Both render the same `AgentEvents`. |
+| `src/update.ts` | Self-update: check GitHub releases, download + verify checksum, atomically replace the running binary, re-exec. |
 | `src/tui/term.ts` | The terminal as a device: alt-screen, raw mode, cursor escapes, key parsing. No library — just the bytes. |
 | `src/tui/splash.ts` | The atom: a tiny z-buffered 3D renderer — tumbling orbits, electron trails, a Lambert-shaded nucleon cluster. |
 | `src/tui/app.ts` | Full-screen app: header, scrolling transcript, bordered input, status line. Redrawn from state each frame. |
