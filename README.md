@@ -61,7 +61,10 @@ that function to turn it into an agent:
 | `src/agent.ts` | The loop: append user msg → call model → if `tool_calls`, run them, append `role:"tool"` results, call again → else return. |
 | `src/tools/` | Each tool = name + description + JSON schema + `execute()`. Always returns a string; errors are returned as text so the model can recover. |
 | `src/prompt.ts` | System prompt. Injects cwd/platform so the model has situational awareness. |
-| `src/cli.ts` | Terminal front end. Owns stdin/stdout, renders `AgentEvents`, asks y/N before dangerous tools. |
+| `src/cli.ts` | Entrypoint. `atom "prompt"` or a pipe → plain mode; `atom` in a terminal → the TUI. Both render the same `AgentEvents`. |
+| `src/tui/term.ts` | The terminal as a device: alt-screen, raw mode, cursor escapes, key parsing. No library — just the bytes. |
+| `src/tui/splash.ts` | The atom: three tilted orbits projected onto the character grid. |
+| `src/tui/app.ts` | Full-screen app: header, scrolling transcript, bordered input, status line. Redrawn from state each frame. |
 
 ### Harness decisions already baked in (and why)
 
@@ -96,4 +99,4 @@ Roughly in the order each one becomes painful without it:
 7. **Provider abstraction** — a second provider behind the same
    `chat()` interface (Anthropic, OpenAI, local).
 8. **Subagents** — a tool whose `execute()` spins up a fresh `Agent`.
-9. **TUI** — replace readline with a proper terminal UI.
+9. ~~**TUI**~~ — done (hand-rolled, zero deps). Next: mouse-wheel scroll, multi-line input.
