@@ -63,7 +63,7 @@ that function to turn it into an agent:
 | `src/prompt.ts` | System prompt. Injects cwd/platform so the model has situational awareness. |
 | `src/cli.ts` | Entrypoint. `atom "prompt"` or a pipe → plain mode; `atom` in a terminal → the TUI. Both render the same `AgentEvents`. |
 | `src/tui/term.ts` | The terminal as a device: alt-screen, raw mode, cursor escapes, key parsing. No library — just the bytes. |
-| `src/tui/splash.ts` | The atom: three tilted orbits projected onto the character grid. |
+| `src/tui/splash.ts` | The atom: a tiny z-buffered 3D renderer — tumbling orbits, electron trails, a Lambert-shaded nucleon cluster. |
 | `src/tui/app.ts` | Full-screen app: header, scrolling transcript, bordered input, status line. Redrawn from state each frame. |
 
 ### Harness decisions already baked in (and why)
